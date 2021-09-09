@@ -1,0 +1,56 @@
+version: "3"
+services:
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    hostname: zookeeper
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - 9092:9092
+
+  mysql:
+    image: mysql:5.7.12
+    hostname: mysql
+    container_name: mysql
+    environment:
+      MYSQL_USER: my_user
+      MYSQL_PASSWORD: my_pass
+      MYSQL_DATABASE: my_db
+      MYSQL_ROOT_PASSWORD: my_root_pass
+    volumes:
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - 3306:3306
+
+  kafka-connect:
+    image: confluentinc/cp-kafka-connect:latest
+    hostname: kafka-connect
+    container_name: kafka-connect
+    depends_on:
+      - kafka
+      - mysql
+    volumes:
+      - ./connect-standalone.properties:/etc/kafka/connect-standalone.properties
+      - ./connect-mysql-sink.properties:/etc/kafka/connect-mysql-sink.properties
+    command: bash -c "
+      confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:latest
+      && wget -O /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-java-8.0.26.jar https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.26/mysql-connector-java-8.0.26.jar
+      && /bin/connect-standalone /etc/kafka/connect-standalone.properties /etc/kafka/connect-mysql-sink.properties
+      "
