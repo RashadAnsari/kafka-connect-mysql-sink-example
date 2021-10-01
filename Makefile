@@ -10,9 +10,6 @@ format:
 lint:
 	@golangci-lint -c .golangci.yml run ./...
 
-proto:
-	@protoc --go_out=. ./hello/*.proto
-
 up:
 	@docker-compose up -d zookeeper kafka mysql
 
