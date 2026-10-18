@@ -1,8 +1,7 @@
-version: "3"
 services:
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:7.9.10
     hostname: zookeeper
     container_name: zookeeper
     environment:
@@ -10,7 +9,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.9.10
     hostname: kafka
     container_name: kafka
     depends_on:
@@ -26,7 +25,7 @@ services:
       - 9092:9092
 
   mysql:
-    image: mysql:5.7.12
+    image: mysql:8.4.11
     hostname: mysql
     container_name: mysql
     environment:
@@ -40,7 +39,7 @@ services:
       - 3306:3306
 
   kafka-connect:
-    image: confluentinc/cp-kafka-connect:latest
+    image: confluentinc/cp-kafka-connect:7.9.10
     hostname: kafka-connect
     container_name: kafka-connect
     depends_on:
@@ -50,7 +49,7 @@ services:
       - ./connect-standalone.properties:/etc/kafka/connect-standalone.properties
       - ./connect-mysql-sink.properties:/etc/kafka/connect-mysql-sink.properties
     command: bash -c "
-      confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:latest
-      && wget -O /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-java-8.0.26.jar https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.26/mysql-connector-java-8.0.26.jar
+      confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.9.9
+      && wget -O /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-j-9.7.0.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.7.0/mysql-connector-j-9.7.0.jar
       && /bin/connect-standalone /etc/kafka/connect-standalone.properties /etc/kafka/connect-mysql-sink.properties
       "
